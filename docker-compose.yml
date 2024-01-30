@@ -26,13 +26,10 @@ services:
     image: postgres:15.5-alpine3.19
     volumes:
       - dev-db-data:/var/lib/postgresql/data
-    restart: always
     environment:
       - POSTGRES_DB=devdb
       - POSTGRES_USER=devuser
       - POSTGRES_PASSWORD=changeme
-    ports:
-      - "5432:5432"
     container_name: postgres_db
 
 volumes:
