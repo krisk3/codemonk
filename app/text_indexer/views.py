@@ -1,8 +1,10 @@
+"""
+Django views for handling HTTP requests and rendering responses.
+"""
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
 from .models import Paragraph, Word
@@ -11,24 +13,43 @@ import uuid
 
 
 class AddTextView(APIView):
+    """
+    API view for adding text paragraphs.
+
+    This view requires authentication using TokenAuthentication
+    and permission using IsAuthenticated.
+    """
+
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     @extend_schema(responses=TextSerializer)
     def post(self, request, *args, **kwargs):
+        """
+        Handles the POST request for adding text paragraphs.
+
+        Args:
+            request: The HTTP request object.
+            args: Additional arguments.
+            kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: HTTP response indicating success or failure.
+        """
         serializer = TextSerializer(data=request.data)
 
         if serializer.is_valid():
-
-            text_data = serializer.validated_data['text']
-            paragraphs = [p.strip() for p in text_data.split('\n\n') if p.strip()]
+            text_data = serializer.validated_data["text"]
+            paragraphs = [p.strip() for p in text_data.split("\n\n") if p.strip()]
 
             unique_id = str(uuid.uuid4().hex)[:8]
             unique_id = unique_id.replace("-", "_")
 
             for idx, paragraph_text in enumerate(paragraphs, start=1):
                 uid = f"{unique_id}-{idx}"
-                paragraph_instance = Paragraph.objects.create(uid=uid, paragraph=paragraph_text)
+                paragraph_instance = Paragraph.objects.create(
+                    uid=uid, paragraph=paragraph_text
+                )
 
                 words = paragraph_text.lower().split()
                 for word in words:
@@ -41,15 +62,33 @@ class AddTextView(APIView):
 
 
 class SearchWordView(APIView):
+    """
+    API view for searching words in paragraphs.
+
+    This view requires authentication using TokenAuthentication
+    and permission using IsAuthenticated.
+    """
+
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     @extend_schema(responses=WordSerializer)
     def post(self, request, *args, **kwargs):
+        """
+        Handles the POST request for searching words in paragraphs.
+
+        Args:
+            request: The HTTP request object.
+            args: Additional arguments.
+            kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: HTTP response containing the search results.
+        """
         serializer = WordSerializer(data=request.data)
 
         if serializer.is_valid():
-            search_word = serializer.validated_data['word']
+            search_word = serializer.validated_data["word"]
             search_word = search_word.lower()
             word_queryset = Word.objects.filter(word=search_word)[:10]
             print(type(search_word))
@@ -57,10 +96,12 @@ class SearchWordView(APIView):
             print(word_queryset)
             for i in word_queryset:
                 paragraph_obj = Paragraph.objects.get(id=i.paragraph_word.id)
-                result_paragraphs.append({
-                    'uid': paragraph_obj.uid,
-                    'paragraph': paragraph_obj.paragraph,
-                })
+                result_paragraphs.append(
+                    {
+                        "uid": paragraph_obj.uid,
+                        "paragraph": paragraph_obj.paragraph,
+                    }
+                )
 
             return Response(result_paragraphs, status=status.HTTP_200_OK)
 
