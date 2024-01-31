@@ -48,4 +48,5 @@ class Word(models.Model):
         Indexes:
             - Index on 'word' and 'paragraph_word' fields for efficient lookups.
         """
-        indexes = [models.Index(fields=['word', 'paragraph_word'])]
+
+        indexes = [models.Index(fields=["word", "paragraph_word"])]
